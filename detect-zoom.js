@@ -46,7 +46,7 @@
         devicePxPerCssPx: 1
     })
 
-    const commonZoomMethod = (screenResolution = window.outerWidth, windowWidth = window.innerWidth) => {
+    const commonZoomMethod = (screenResolution, windowWidth) => {
         const zoom = Math.round(((screenResolution) / windowWidth)*100) / 100;
 		return {
 			zoom: zoom * 100,
@@ -59,13 +59,13 @@
 	 * For chrome
 	 * @return {Object}
 	 */
-	const chrome = commonZoomMethod;
+	const chrome = () => commonZoomMethod(window.outerWidth, window.innerWidth);
 
 	/**
 	 * For safari (same as chrome)
 	 * @return {Object}
 	 */
-	const safari = commonZoomMethod;
+	const safari = () => commonZoomMethod(window.outerWidth, window.innerWidth);
 
 	/**
 	 * Firefox 18.x
@@ -78,7 +78,7 @@
     const firefox18 = function () {
         const pixelRatio = isRetinaDevice ? devicePixelRatio() / 2 : devicePixelRatio()
         const screenWidthResolution = screen.width * pixelRatio;
-		return commonZoomMethod(screenWidthResolution);
+		return commonZoomMethod(screenWidthResolution, window.innerWidth);
 	};
 
 
