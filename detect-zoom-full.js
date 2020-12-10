@@ -50,7 +50,8 @@
         const zoom = Math.round(((screenResolution) / windowWidth)*100) / 100;
 		return {
 			zoom: zoom * 100,
-			devicePxPerCssPx: zoom * devicePixelRatio()
+            devicePxPerCssPx: zoom * devicePixelRatio(),
+            screenResolution
 		};
     }
 
