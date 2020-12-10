@@ -162,28 +162,3 @@
 	jQuery.fn[sr] = function(fn){  return fn ? this.on('resize', debounce(fn)) : this.trigger(sr); };
 
 })(jQuery,'smartresize');
-
-
-//-----------------------
-// Custom functions
-//-----------------------
-
-const aZoom = $('.a-zoom');
-const dZoom = $('.d-zoom');
-
-function getZoomValues () {
-	const zoom = detectZoom.zoom();
-	const device = detectZoom.device();
-	const newZoomVal = parseFloat(zoom,10).toFixed(0);
-	const newDeviceVal = parseFloat(device,10).toFixed(0);
-	aZoom.text(newZoomVal);
-	dZoom.text(newDeviceVal);
-}
-
-$(document).ready(function() {
-	getZoomValues();
-});
-$(window).smartresize(function(){
-	getZoomValues();
-
-});
