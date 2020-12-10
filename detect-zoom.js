@@ -88,7 +88,7 @@
 	 * @private
 	 */
 	const detectFunction = (function () {
-        const func = fallback;
+        let func = fallback;
 
         const isSafari =
             /Safari/.test(navigator.userAgent) &&
@@ -140,7 +140,7 @@
 //-----------------------
 (function($,sr){
 	const debounce = function (func, threshold, execAsap) {
-		const timeout;
+		let timeout;
 
 		return function debounced () {
 			const obj = this, args = arguments;
