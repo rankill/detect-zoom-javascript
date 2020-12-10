@@ -29,198 +29,68 @@
 	 * @return {Number}
 	 * @private
 	 */
-	var devicePixelRatio = function () {
+	const devicePixelRatio = () => {
 		return window.devicePixelRatio || 1;
-	};
-
+    };
+    
+    const isRetinaDevice = () => {
+        return devicePixelRatio() > 1
+    }
 	/**
 	 * Fallback function to set default values
 	 * @return {Object}
 	 * @private
 	 */
-	var fallback = function () {
+	const fallback = () => ({
+        zoom: 1,
+        devicePxPerCssPx: 1
+    })
+
+    const commonZoomMethod = (screenResolution = window.outerWidth, windowWidth = window.innerWidth) => {
+        const zoom = Math.round(((screenResolution) / windowWidth)*100) / 100;
 		return {
-			zoom: 1,
-			devicePxPerCssPx: 1
+			zoom: zoom * 100,
+			devicePxPerCssPx: zoom * devicePixelRatio()
 		};
-	};
+    }
+
 
 	/**
 	 * For chrome
-	 *
+	 * @return {Object}
 	 */
-	var chrome = function()
-	{
-		var zoom = Math.round(((window.outerWidth) / window.innerWidth)*100) / 100;
-		return {
-			zoom: zoom * 100,
-			devicePxPerCssPx: zoom * devicePixelRatio()
-		};
-	}
+	const chrome = commonZoomMethod;
 
 	/**
 	 * For safari (same as chrome)
-	 *
-	 */
-	var safari= function()
-	{
-		var zoom = Math.round(((window.outerWidth) / window.innerWidth)*100) / 100;
-		return {
-			zoom: zoom * 100,
-			devicePxPerCssPx: zoom * devicePixelRatio()
-		};
-	}
-
-
-
-	/**
-	 * Desktop Webkit
-	 * the trick: an element's clientHeight is in CSS pixels, while you can
-	 * set its line-height in system pixels using font-size and
-	 * -webkit-text-size-adjust:none.
-	 * device-pixel-ratio: http://www.webkit.org/blog/55/high-dpi-web-sites/
-	 *
-	 * Previous trick (used before http://trac.webkit.org/changeset/100847):
-	 * documentElement.scrollWidth is in CSS pixels, while
-	 * document.width was in system pixels. Note that this is the
-	 * layout width of the document, which is slightly different from viewport
-	 * because document width does not include scrollbars and might be wider
-	 * due to big elements.
 	 * @return {Object}
-	 * @private
 	 */
-	var webkit = function () {
-		var important = function (str) {
-			return str.replace(/;/g, " !important;");
-		};
-
-		var div = document.createElement('div');
-		div.innerHTML = "1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>0";
-		div.setAttribute('style', important('font: 100px/1em sans-serif; -webkit-text-size-adjust: none; text-size-adjust: none; height: auto; width: 1em; padding: 0; overflow: visible;'));
-
-		// The container exists so that the div will be laid out in its own flow
-		// while not impacting the layout, viewport size, or display of the
-		// webpage as a whole.
-		// Add !important and relevant CSS rule resets
-		// so that other rules cannot affect the results.
-		var container = document.createElement('div');
-		container.setAttribute('style', important('width:0; height:0; overflow:hidden; visibility:hidden; position: absolute;'));
-		container.appendChild(div);
-
-		document.body.appendChild(container);
-		var zoom = 1000 / div.clientHeight;
-		zoom = Math.round(zoom * 100) / 100;
-		document.body.removeChild(container);
-
-		return{
-			zoom: zoom,
-			devicePxPerCssPx: zoom * devicePixelRatio()
-		};
-	};
-
-
-    
-    /**
-	 * no real trick; device-pixel-ratio is the ratio of device dpi / css dpi.
-	 * (Note that this is a different interpretation than Webkit's device
-	 * pixel ratio, which is the ratio device dpi / system dpi).
-	 *
-	 * Also, for Mozilla, there is no difference between the zoom factor and the device ratio.
-	 *
-	 * @return {Object}
-	 * @private
-	 */
-	var firefox4 = function () {
-		var zoom = mediaQueryBinarySearch('min--moz-device-pixel-ratio', '', 0, 10, 20, 0.0001);
-		zoom = Math.floor(zoom * 100) / 100;
-		return {
-			zoom: zoom,
-			devicePxPerCssPx: zoom
-		};
-	};
+	const safari = commonZoomMethod;
 
 	/**
 	 * Firefox 18.x
 	 * Mozilla added support for devicePixelRatio to Firefox 18,
-	 * but it is affected by the zoom level, so, like in older
-	 * Firefox we can't tell if we are in zoom mode or in a device
-	 * with a different pixel ratio
+	 * but it is affected by the zoom level, and by retina display 
+     * so we need to check retina displays and treat it as normal display
 	 * @return {Object}
 	 * @private
 	 */
-	var firefox18 = function () {
-        const base = 2
-        const basePercent = 100
-        const zoom = (firefox4().zoom * basePercent) / base
-        return {
-            zoom,
-			devicePxPerCssPx: devicePixelRatio()
-		};
+    const firefox18 = function () {
+        const pixelRatio = isRetinaDevice ? devicePixelRatio() / 2 : devicePixelRatio()
+        const screenWidthResolution = screen.width * pixelRatio;
+		return commonZoomMethod(screenWidthResolution);
 	};
 
-
-	/**
-	 * Use a binary search through media queries to find zoom level in Firefox
-	 * @param property
-	 * @param unit
-	 * @param a
-	 * @param b
-	 * @param maxIter
-	 * @param epsilon
-	 * @return {Number}
-	 */
-	var mediaQueryBinarySearch = function (property, unit, a, b, maxIter, epsilon) {
-		var matchMedia;
-		var head, style, div;
-		if (window.matchMedia) {
-			matchMedia = window.matchMedia;
-		} else {
-			head = document.getElementsByTagName('head')[0];
-			style = document.createElement('style');
-			head.appendChild(style);
-
-			div = document.createElement('div');
-			div.className = 'mediaQueryBinarySearch';
-			div.style.display = 'none';
-			document.body.appendChild(div);
-
-			matchMedia = function (query) {
-				style.sheet.insertRule('@media ' + query + '{.mediaQueryBinarySearch ' + '{text-decoration: underline} }', 0);
-				var matched = getComputedStyle(div, null).textDecoration == 'underline';
-				style.sheet.deleteRule(0);
-				return {matches: matched};
-			};
-		}
-		var ratio = binarySearch(a, b, maxIter);
-		if (div) {
-			head.removeChild(style);
-			document.body.removeChild(div);
-		}
-		return ratio;
-
-		function binarySearch(a, b, maxIter) {
-			var mid = (a + b) / 2;
-			if (maxIter <= 0 || b - a < epsilon) {
-				return mid;
-			}
-			var query = "(" + property + ":" + mid + unit + ")";
-			if (matchMedia(query).matches) {
-				return binarySearch(mid, b, maxIter - 1);
-			} else {
-				return binarySearch(a, mid, maxIter - 1);
-			}
-		}
-	};
 
 
 	/**
 	 * Generate detection function
 	 * @private
 	 */
-	var detectFunction = (function () {
-        var func = fallback;
+	const detectFunction = (function () {
+        const func = fallback;
 
-        var isSafari =
+        const isSafari =
             /Safari/.test(navigator.userAgent) &&
             /Apple Computer/.test(navigator.vendor);
 
@@ -269,11 +139,11 @@
 // debouncing plugin by Paul Irish https://www.paulirish.com/2009/throttled-smartresize-jquery-event-handler/
 //-----------------------
 (function($,sr){
-	var debounce = function (func, threshold, execAsap) {
-		var timeout;
+	const debounce = function (func, threshold, execAsap) {
+		const timeout;
 
 		return function debounced () {
-			var obj = this, args = arguments;
+			const obj = this, args = arguments;
 			function delayed () {
 				if (!execAsap)
 					func.apply(obj, args);
@@ -298,14 +168,14 @@
 // Custom functions
 //-----------------------
 
-var aZoom = $('.a-zoom');
-var dZoom = $('.d-zoom');
+const aZoom = $('.a-zoom');
+const dZoom = $('.d-zoom');
 
 function getZoomValues () {
-	var zoom = detectZoom.zoom();
-	var device = detectZoom.device();
-	var newZoomVal = parseFloat(zoom,10).toFixed(0);
-	var newDeviceVal = parseFloat(device,10).toFixed(0);
+	const zoom = detectZoom.zoom();
+	const device = detectZoom.device();
+	const newZoomVal = parseFloat(zoom,10).toFixed(0);
+	const newDeviceVal = parseFloat(device,10).toFixed(0);
 	aZoom.text(newZoomVal);
 	dZoom.text(newDeviceVal);
 }
