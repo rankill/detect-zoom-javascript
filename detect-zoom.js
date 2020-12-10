@@ -50,7 +50,8 @@
         const zoom = Math.round(((screenResolution) / windowWidth)*100) / 100;
 		return {
 			zoom: zoom * 100,
-			devicePxPerCssPx: zoom * devicePixelRatio()
+            devicePxPerCssPx: zoom * devicePixelRatio(),
+            screenResolution
 		};
     }
 
@@ -126,11 +127,11 @@
 		},
 
 		/**
-		 * Ratios.devicePxPerCssPx shorthand
-		 * @return {Number} devicePxPerCssPx level
+		 * Ratios.screenResolution shorthand
+		 * @return {Number} screenResolution value
 		 */
-		device: function () {
-			return detectFunction().devicePxPerCssPx;
+		screenResolution: function () {
+			return detectFunction().screenResolution;
 		}
 	});
 }));
@@ -162,3 +163,23 @@
 	jQuery.fn[sr] = function(fn){  return fn ? this.on('resize', debounce(fn)) : this.trigger(sr); };
 
 })(jQuery,'smartresize');
+
+//-----------------------
+// Custom functions
+//-----------------------
+
+const aZoom = $('.a-zoom');
+const dZoom = $('.d-zoom');
+
+function getZoomValues () {
+	const zoom = detectZoom.zoom();
+	const newZoomVal = parseFloat(zoom,10).toFixed(0);
+	aZoom.text(newZoomVal);
+}
+
+$(document).ready(function() {
+	getZoomValues();
+});
+$(window).smartresize(function(){
+	getZoomValues();
+});

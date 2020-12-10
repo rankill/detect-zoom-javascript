@@ -127,11 +127,11 @@
 		},
 
 		/**
-		 * Ratios.devicePxPerCssPx shorthand
-		 * @return {Number} devicePxPerCssPx level
+		 * Ratios.screenResolution shorthand
+		 * @return {Number} screenResolution value
 		 */
-		device: function () {
-			return detectFunction().devicePxPerCssPx;
+		screenResolution: function () {
+			return detectFunction().screenResolution;
 		}
 	});
 }));
